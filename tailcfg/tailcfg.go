@@ -65,7 +65,8 @@ type CapabilityVersion int
 //    26: 2022-01-12: (nothing, just bumping for 1.20.0)
 //    27: 2022-02-18: start of SSHPolicy being respected
 //    28: 2022-03-09: client can communicate over Noise.
-const CurrentCapabilityVersion CapabilityVersion = 28
+//    29: 2022-03-18: client knows FilterRule.CapMatch
+const CurrentCapabilityVersion CapabilityVersion = 29
 
 type StableID string
 
@@ -1050,6 +1051,18 @@ type NetPortRange struct {
 	Ports PortRange
 }
 
+// CapMatch grants capabilities in a FilterRule.
+type CapMatch struct {
+	// Dsts are the destination IP ranges that this capabilty
+	// grant matches.
+	Dsts []netaddr.IPPrefix
+
+	// Caps are the capabilities the source IP matched by
+	// FilterRule.SrcIPs are granted to the destination IP,
+	// matched by DstIP.
+	Caps []string `json:",omitempty"`
+}
+
 // FilterRule represents one rule in a packet filter.
 //
 // A rule is logically a set of source CIDRs to match (described by
@@ -1080,7 +1093,7 @@ type FilterRule struct {
 
 	// DstPorts are the port ranges to allow once a source IP
 	// matches (is in the CIDR described by SrcIPs & SrcBits).
-	DstPorts []NetPortRange
+	DstPorts []NetPortRange `json:",omitempty"`
 
 	// IPProto are the IP protocol numbers to match.
 	//
@@ -1092,6 +1105,16 @@ type FilterRule struct {
 	// Depending on the IPProto values, DstPorts may or may not be
 	// used.
 	IPProto []int `json:",omitempty"`
+
+	// CapMatch, if non-empty, are the capabilities to
+	// conditionally grant to the source IP in SrcIPs.
+	//
+	// Think of DstPorts as "capabilities for networking" and
+	// CapMatch as arbitrary application-defined capabilities
+	// defined between the admin's ACLs and the application
+	// doing WhoIs lookups, looking up the remote IP address's
+	// application-level capabilities.
+	CapMatch []CapMatch `json:",omitempty"`
 }
 
 var FilterAllowAll = []FilterRule{

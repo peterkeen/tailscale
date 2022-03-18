@@ -172,6 +172,7 @@ func (h *Handler) serveWhoIs(w http.ResponseWriter, r *http.Request) {
 	res := &apitype.WhoIsResponse{
 		Node:        n,
 		UserProfile: &u,
+		Caps:        b.PeerCaps(ipp.IP()),
 	}
 	j, err := json.MarshalIndent(res, "", "\t")
 	if err != nil {

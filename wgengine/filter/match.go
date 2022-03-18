@@ -47,12 +47,18 @@ func (npr NetPortRange) String() string {
 	return fmt.Sprintf("%v:%v", npr.Net, npr.Ports)
 }
 
+type CapMatch struct {
+	Net netaddr.IPPrefix
+	Cap string
+}
+
 // Match matches packets from any IP address in Srcs to any ip:port in
 // Dsts.
 type Match struct {
 	IPProto []ipproto.Proto // required set (no default value at this layer)
 	Dsts    []NetPortRange
 	Srcs    []netaddr.IPPrefix
+	Caps    []CapMatch
 }
 
 func (m Match) String() string {

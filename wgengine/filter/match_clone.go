@@ -23,6 +23,7 @@ func (src *Match) Clone() *Match {
 	dst.IPProto = append(src.IPProto[:0:0], src.IPProto...)
 	dst.Dsts = append(src.Dsts[:0:0], src.Dsts...)
 	dst.Srcs = append(src.Srcs[:0:0], src.Srcs...)
+	dst.Caps = append(src.Caps[:0:0], src.Caps...)
 	return dst
 }
 
@@ -31,4 +32,5 @@ var _MatchCloneNeedsRegeneration = Match(struct {
 	IPProto []ipproto.Proto
 	Dsts    []NetPortRange
 	Srcs    []netaddr.IPPrefix
+	Caps    []CapMatch
 }{})
