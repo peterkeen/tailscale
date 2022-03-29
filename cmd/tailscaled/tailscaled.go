@@ -130,14 +130,6 @@ var subCommands = map[string]*func([]string) error{
 }
 
 func main() {
-	// We aren't very performance sensitive, and the parts that are
-	// performance sensitive (wireguard) try hard not to do any memory
-	// allocations. So let's be aggressive about garbage collection,
-	// unless the user specifically overrides it in the usual way.
-	if _, ok := os.LookupEnv("GOGC"); !ok {
-		debug.SetGCPercent(10)
-	}
-
 	printVersion := false
 	flag.IntVar(&args.verbose, "verbose", 0, "log verbosity level; 0 is default, 1 or higher are increasingly verbose")
 	flag.BoolVar(&args.cleanup, "cleanup", false, "clean up system state and exit")
@@ -179,6 +171,18 @@ func main() {
 	if printVersion {
 		fmt.Println(version.String())
 		os.Exit(0)
+	}
+
+	if !strings.Contains(args.tunname, "userspace-networking") {
+		// We aren't very performance sensitive, and the parts that are
+		// performance sensitive (wireguard) try hard not to do any memory
+		// allocations. So let's be aggressive about garbage collection,
+		// unless the user specifically overrides it in the usual way.
+		// Except when using userspace-networking, wherein we allocate more
+		// often and do not want pools free'd prematurely.
+		if _, ok := os.LookupEnv("GOGC"); !ok {
+			debug.SetGCPercent(10)
+		}
 	}
 
 	if runtime.GOOS == "darwin" && os.Getuid() != 0 && !strings.Contains(args.tunname, "userspace-networking") && !args.cleanup {
