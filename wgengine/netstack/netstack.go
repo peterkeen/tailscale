@@ -415,6 +415,8 @@ func (ns *Impl) peerAPIPortAtomic(ip netaddr.IP) *uint32 {
 	}
 }
 
+var viaRange = tsaddr.TailscaleViaRange()
+
 // shouldProcessInbound reports whether an inbound packet should be
 // handled by netstack.
 func (ns *Impl) shouldProcessInbound(p *packet.Parsed, t *tstun.Wrapper) bool {
@@ -435,6 +437,9 @@ func (ns *Impl) shouldProcessInbound(p *packet.Parsed, t *tstun.Wrapper) bool {
 		}
 	}
 	if ns.isInboundTSSH(p) && ns.processSSH() {
+		return true
+	}
+	if p.IPVersion == 6 && viaRange.Contains(p.Dst.IP()) {
 		return true
 	}
 	if !ns.ProcessLocalIPs && !ns.ProcessSubnets {
@@ -608,6 +613,13 @@ func (ns *Impl) acceptTCP(r *tcp.ForwarderRequest) {
 
 	dialIP := netaddrIPFromNetstackIP(reqDetails.LocalAddress)
 	isTailscaleIP := tsaddr.IsTailscaleIP(dialIP)
+
+	if viaRange.Contains(dialIP) {
+		isTailscaleIP = false
+		dial16 := dialIP.As16()
+		dialIP = netaddr.IPv4(dial16[12], dial16[13], dial16[14], dial16[15])
+	}
+
 	defer func() {
 		if !isTailscaleIP {
 			// if this is a subnet IP, we added this in before the TCP handshake

@@ -34,6 +34,7 @@ var (
 	cgnatRange   oncePrefix
 	ulaRange     oncePrefix
 	tsUlaRange   oncePrefix
+	tsViaRange   oncePrefix
 	ula4To6Range oncePrefix
 	ulaEph6Range oncePrefix
 	serviceIPv6  oncePrefix
@@ -70,6 +71,14 @@ func IsTailscaleIP(ip netaddr.IP) bool {
 func TailscaleULARange() netaddr.IPPrefix {
 	tsUlaRange.Do(func() { mustPrefix(&tsUlaRange.v, "fd7a:115c:a1e0::/48") })
 	return tsUlaRange.v
+}
+
+// TailscaleViaRange returns the IPv6 Unique Local Address subset range
+// TailscaleULARange that's used for IPv4 tunneling via IPv6.
+func TailscaleViaRange() netaddr.IPPrefix {
+	// Mnemonic: "b1a" sounds like "via".
+	tsViaRange.Do(func() { mustPrefix(&tsViaRange.v, "fd7a:115c:a1e0:b1a::/64") })
+	return tsViaRange.v
 }
 
 // Tailscale4To6Range returns the subset of TailscaleULARange used for
